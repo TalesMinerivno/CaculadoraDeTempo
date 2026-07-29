@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Interrupções</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --card: #1a2129;
+    --card-border: #2a3340;
+    --accent: #4fd1c5;
+    --accent-soft: rgba(79, 209, 197, 0.12);
+    --text: #e6edf3;
+    --text-dim: #8b98a5;
+    --danger: #f87171;
+    --danger-soft: rgba(248,113,113,0.12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 680px;
+    width: 100%;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .subtitle code {
+    background: var(--card);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    margin: 0 0 14px 0;
+    font-size: 1rem;
+    color: var(--accent);
+  }
+  .field-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .field {
+    flex: 1;
+    min-width: 180px;
+  }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: #0f1419;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+  }
+  input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  input[type="text"].invalid {
+    border-color: var(--danger);
+  }
+  .interruption-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--card-border);
+  }
+  .interruption-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .interruption-row .field-group {
+    flex: 1;
+  }
+  .row-info {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    min-width: 90px;
+    text-align: right;
+  }
+  .row-info.invalid {
+    color: var(--danger);
+  }
+  .remove-btn {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: none;
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .remove-btn:hover { background: rgba(248,113,113,0.22); }
+  .add-btn {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .add-btn:hover { background: rgba(79,209,197,0.22); }
+
+  .results {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .result-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.95rem;
+  }
+  .result-line .label {
+    color: var(--text-dim);
+  }
+  .result-line .value {
+    font-weight: 600;
+  }
+  .big-result {
+    margin-top: 6px;
+    padding-top: 14px;
+    border-top: 1px solid var(--card-border);
+    text-align: center;
+  }
+  .big-result .label {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+  .big-result .value {
+    font-size: 1.6rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .total-pill {
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Calculadora de Interrupções</h1>
+  <p class="subtitle">
+    Formato de data/hora: <code>DD/MM/AAAA HH:MM:SS</code> (ex: 12/06/2026 11:09:00).<br>
+    Dê <strong>duplo clique</strong> em qualquer campo para selecionar todo o conteúdo e use <strong>Ctrl+C / Ctrl+V</strong> para copiar e colar entre os campos.
+  </p>
+
+  <div class="card">
+    <h2>Início do serviço (base)</h2>
+    <div class="field-group">
+      <div class="field">
+        <label for="baseStart">Data/Hora de início</label>
+        <input type="text" id="baseStart" placeholder="Ex: 12/06/2026 11:09:00">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Interrupções</h2>
+    <div id="interruptionsList"></div>
+    <button class="add-btn" onclick="addInterruption()">+ Adicionar interrupção</button>
+  </div>
+
+  <div class="card">
+    <h2>Resultado</h2>
+    <div class="results">
+      <div class="result-line">
+        <span class="label">Total de interrupções somadas (sem sobreposição)</span>
+        <span class="value total-pill" id="totalDuration">00:00:00</span>
+      </div>
+      <div class="big-result">
+        <div class="label">Data/Hora final ajustada (início + tempo interrompido)</div>
+        <div class="value" id="finalResult">--/--/---- --:--:--</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let counter = 0;
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+// Faz o parse de uma string "DD/MM/AAAA HH:MM:SS"
+function parseDateTime(str) {
+  if (!str) return null;
+  str = str.trim();
+  const match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!match) return null;
+
+  const [, dd, mm, yyyy, hh, min, ss] = match;
+  const day = parseInt(dd, 10);
+  const month = parseInt(mm, 10);
+  const year = parseInt(yyyy, 10);
+  const hour = parseInt(hh, 10);
+  const minute = parseInt(min, 10);
+  const second = ss ? parseInt(ss, 10) : 0;
+
+  if (month < 1 || month > 12) return null;
+  if (day < 1 || day > 31) return null;
+  if (hour > 23 || minute > 59 || second > 59) return null;
+
+  const date = new Date(year, month - 1, day, hour, minute, second);
+  if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
+    return null;
+  }
+  return date;
+}
+
+function formatDateTime(date) {
+  return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+function formatDuration(totalSeconds) {
+  const sign = totalSeconds < 0 ? '-' : '';
+  totalSeconds = Math.abs(totalSeconds);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = Math.floor(totalSeconds % 60);
+  return `${sign}${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+// Seleciona todo o conteúdo do campo ao dar duplo clique
+function selectAllOnDoubleClick(e) {
+  e.target.select();
+}
+
+function addInterruption(startVal, endVal) {
+  counter++;
+  const id = counter;
+  const row = document.createElement('div');
+  row.className = 'interruption-row';
+  row.dataset.id = id;
+  row.innerHTML = `
+    <div class="field-group">
+      <div class="field">
+        <label>Início (interrupção ${id})</label>
+        <input type="text" class="int-start" placeholder="Ex: 12/06/2026 11:09:00">
+      </div>
+      <div class="field">
+        <label>Fim (interrupção ${id})</label>
+        <input type="text" class="int-end" placeholder="Ex: 12/06/2026 11:15:00">
+      </div>
+    </div>
+    <div class="row-info" id="rowInfo-${id}">--:--:--</div>
+    <button class="remove-btn" onclick="removeInterruption(this)" title="Remover">×</button>
+  `;
+  document.getElementById('interruptionsList').appendChild(row);
+
+  const startInput = row.querySelector('.int-start');
+  const endInput = row.querySelector('.int-end');
+
+  if (startVal) startInput.value = startVal;
+  if (endVal) endInput.value = endVal;
+
+  [startInput, endInput].forEach(input => {
+    input.addEventListener('dblclick', selectAllOnDoubleClick);
+    input.addEventListener('input', recalculate);
+    input.addEventListener('paste', () => setTimeout(recalculate, 0));
+  });
+
+  recalculate();
+}
+
+function removeInterruption(btn) {
+  btn.closest('.interruption-row').remove();
+  recalculate();
+}
+
+// Função recalculate atualizada com a lógica de "Merge Intervals" (não sobrepõe o tempo)
+function recalculate() {
+  const rows = document.querySelectorAll('.interruption-row');
+  let validIntervals = [];
+
+  // 1. Valida e coleta todos os intervalos individuais
+  rows.forEach(row => {
+    const id = row.dataset.id;
+    const startInput = row.querySelector('.int-start');
+    const endInput = row.querySelector('.int-end');
+    const infoEl = document.getElementById(`rowInfo-${id}`);
+
+    const startStr = startInput.value;
+    const endStr = endInput.value;
+
+    startInput.classList.remove('invalid');
+    endInput.classList.remove('invalid');
+    infoEl.classList.remove('invalid');
+
+    if (startStr && endStr) {
+      const start = parseDateTime(startStr);
+      const end = parseDateTime(endStr);
+
+      if (!start || !end) {
+        if (!start) startInput.classList.add('invalid');
+        if (!end) endInput.classList.add('invalid');
+        infoEl.textContent = 'formato inválido';
+        infoEl.classList.add('invalid');
+        return;
+      }
+
+      const diffSeconds = (end - start) / 1000;
+
+      if (diffSeconds < 0) {
+        infoEl.textContent = 'fim < início';
+        infoEl.classList.add('invalid');
+      } else {
+        // Exibe o tempo da linha individual normalmente
+        infoEl.textContent = formatDuration(diffSeconds);
+        // Salva o intervalo válido para processamento do total
+        validIntervals.push({ start: start.getTime(), end: end.getTime() });
+      }
+    } else {
+      infoEl.textContent = '--:--:--';
+    }
+  });
+
+  // 2. Lógica para MESCLAR intervalos sobrepostos (Merge Intervals)
+  validIntervals.sort((a, b) => a.start - b.start);
+  let mergedIntervals = [];
+  
+  if (validIntervals.length > 0) {
+    let current = validIntervals[0];
+    for (let i = 1; i < validIntervals.length; i++) {
+      if (validIntervals[i].start <= current.end) {
+        // Se houver sobreposição, estende o fim se o novo intervalo for maior
+        current.end = Math.max(current.end, validIntervals[i].end);
+      } else {
+        mergedIntervals.push(current);
+        current = validIntervals[i];
+      }
+    }
+    mergedIntervals.push(current);
+  }
+
+  // 3. Soma apenas os tempos reais de interrupção
+  let totalSeconds = 0;
+  mergedIntervals.forEach(interval => {
+    totalSeconds += (interval.end - interval.start) / 1000;
+  });
+
+  document.getElementById('totalDuration').textContent = formatDuration(totalSeconds);
+
+  // 4. Calcula o resultado final (Base + Tempo Real Interrompido)
+  const baseInput = document.getElementById('baseStart');
+  const baseStr = baseInput.value;
+  const finalEl = document.getElementById('finalResult');
+
+  baseInput.classList.remove('invalid');
+
+  if (baseStr) {
+    const base = parseDateTime(baseStr);
+    if (!base) {
+      baseInput.classList.add('invalid');
+      finalEl.textContent = 'formato inválido';
+    } else {
+      const finalDate = new Date(base.getTime() + totalSeconds * 1000);
+      finalEl.textContent = formatDateTime(finalDate);
+    }
+  } else {
+    finalEl.textContent = '--/--/---- --:--:--';
+  }
+}
+
+function syncFirstInterruptionStart() {
+  const firstRow = document.querySelector('.interruption-row');
+  if (!firstRow) return;
+  const firstStartInput = firstRow.querySelector('.int-start');
+  firstStartInput.value = baseInput.value;
+}
+
+const baseInput = document.getElementById('baseStart');
+baseInput.addEventListener('dblclick', selectAllOnDoubleClick);
+baseInput.addEventListener('input', () => {
+  syncFirstInterruptionStart();
+  recalculate();
+});
+baseInput.addEventListener('paste', () => setTimeout(() => {
+  syncFirstInterruptionStart();
+  recalculate();
+}, 0));
+
+// Inicializa a calculadora VAZIA
+baseInput.value = '';
+addInterruption(); // Cria apenas uma linha inicial em branco
+recalculate();
+</script>
+</body>
+</html>
